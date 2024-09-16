@@ -2,10 +2,12 @@ package userHandler
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	usermodels "github.com/KingSupermarket/model/userModels"
 	requsermodel "github.com/KingSupermarket/model/userModels/reqUserModel"
+	"github.com/KingSupermarket/pkg/redisDB"
 	"github.com/KingSupermarket/pkg/security"
 	"github.com/KingSupermarket/repository"
 	repouseriml "github.com/KingSupermarket/repository/repo_user_iml"
@@ -72,6 +74,14 @@ func SignUpHandler(db *mongo.Client) gin.HandlerFunc {
 			})
 			return
 		}
+		r := redisDB.GetInstanceRedis()
+		Rediserr := r.SaveRefreshToken(refreshToken)
+		if Rediserr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "faild saving token",
+			})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"result":        "signup successful",
 			"data":          &data,
@@ -83,6 +93,23 @@ func SignUpHandler(db *mongo.Client) gin.HandlerFunc {
 
 func SignInHandler(db *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		refreshToken := c.GetHeader("Authorization")
+		if refreshToken != "" {
+			refreshToken = strings.TrimPrefix(refreshToken, "Bearer ")
+		}
+
+		// Nếu có refresh token, thử cập nhật access token
+		if refreshToken != "" {
+			newAccessToken, err := security.UpdateToken(refreshToken)
+			if err == nil {
+				// Nếu cập nhật thành công, trả về access token mới
+				c.JSON(http.StatusOK, gin.H{
+					"result":       "signin successful",
+					"access token": newAccessToken,
+				})
+				return
+			}
+		}
 		var reqSignin requsermodel.SigninModel
 		if err := c.ShouldBind(&reqSignin); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -114,7 +141,7 @@ func SignInHandler(db *mongo.Client) gin.HandlerFunc {
 			return
 		}
 		//updated token
-		acToken, reqToken, _ := security.UpdateToken(foundUsers)
+		acToken, reqToken, _ := security.JwtToken(foundUsers)
 		c.JSON(http.StatusOK, gin.H{
 			"result":        "signin successful",
 			"access token":  acToken,
@@ -199,6 +226,31 @@ func DeleteUserHandler(db *mongo.Client) gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"comment": "delete user successfully",
+		})
+	}
+}
+func HandlerHistory(db *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenData, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "bad user id",
+			})
+			return
+		}
+		dataClaims := tokenData.(string)
+		bus := repository.NewUserRepoIml(repouseriml.NewDB(db))
+		users, histroy, err := bus.NewHistoryPurchases(c.Request.Context(), dataClaims)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "faild history user",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"comment":        "delete user successfully",
+			"User":           users,
+			"historyPurchas": histroy,
 		})
 	}
 }

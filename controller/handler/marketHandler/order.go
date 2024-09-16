@@ -5,6 +5,7 @@ import (
 	"time"
 
 	marketmodels "github.com/KingSupermarket/model/marketModels"
+	"github.com/KingSupermarket/repository"
 	repomarketiml "github.com/KingSupermarket/repository/repo_market_iml"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -61,8 +62,8 @@ func CreateOrderHandler(db *mongo.Client) gin.HandlerFunc {
 			Created_at:   &time,
 			Updated_at:   &time,
 		}
-		bus := repomarketiml.NewDbOrder(db)
-		if err := bus.CreateOrder(c.Request.Context(), order, dataClaims); err != nil {
+		bus := repository.NewOrderRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewCreateOrder(c.Request.Context(), order, dataClaims); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Can't not bussiness order",
 			})
@@ -86,8 +87,8 @@ func HandlerGetOrder(db *mongo.Client) gin.HandlerFunc {
 		dataClaims := tokenData.(string)
 		idOrder := c.Param("order_id")
 
-		biz := repomarketiml.NewDbOrder(db)
-		data, err := biz.GetOrder(c.Request.Context(), idOrder, dataClaims)
+		bus := repository.NewOrderRepoImpl(repomarketiml.NewDb(db))
+		data, err := bus.NewGetOrder(c.Request.Context(), idOrder, dataClaims)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "getOrder faild",
@@ -120,8 +121,8 @@ func HandlerUpdateOrder(db *mongo.Client) gin.HandlerFunc {
 		time := time.Now().UTC()
 		data.Updated_at = &time
 		data.Order_day = &time
-		biz := repomarketiml.NewDbOrder(db)
-		if err := biz.UpdateOrder(c.Request.Context(), idOrder, &data, dataClaims); err != nil {
+		bus := repository.NewOrderRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewUpdateOrder(c.Request.Context(), idOrder, &data, dataClaims); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": " data faild",
 			})
@@ -143,8 +144,8 @@ func HandlerDeleteOrder(db *mongo.Client) gin.HandlerFunc {
 		}
 		dataClaims := tokenData.(string)
 		idOrder := c.Param("order_id")
-		biz := repomarketiml.NewDbOrder(db)
-		if err := biz.DeleteOrder(c.Request.Context(), idOrder, dataClaims); err != nil {
+		bus := repository.NewOrderRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewDeleteOrder(c.Request.Context(), idOrder, dataClaims); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": " delete order faild",
 			})

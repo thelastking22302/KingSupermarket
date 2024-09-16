@@ -1,11 +1,14 @@
 package security
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
 
 	usermodels "github.com/KingSupermarket/model/userModels"
+	"github.com/KingSupermarket/pkg/logger"
+	"github.com/KingSupermarket/pkg/redisDB"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -41,17 +44,35 @@ func JwtToken(data *usermodels.Users) (string, string, error) {
 	return accessToken, refreshToken, nil
 }
 
-func UpdateToken(data *usermodels.Users) (string, string, error) {
+func UpdateToken(refreshtoken string) (string, error) {
 	//new token
-	newAccessToken, newRefreshToken, err := JwtToken(data)
+	claims, err := ValidateToken(refreshtoken)
 	if err != nil {
-		return "", "", err
+		return "", errors.New("refreshtoken khong hop le")
 	}
-	return newAccessToken, newRefreshToken, nil
+	//kiem tra refresh token con han hay khong
+	if claims.ExpiresAt < time.Now().Local().Unix() {
+		return "", errors.New("refresh token het han ban phai dang nhap lai")
+	}
+	newAccessToken := &usermodels.Token{
+		User_Id: claims.User_Id,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24)).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			NotBefore: time.Now().Unix(),
+		},
+	}
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, newAccessToken).SignedString([]byte(keyJwt))
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
 }
 
 func ValidateToken(userToken string) (*usermodels.Token, error) {
 	//xac thuc token
+	log := logger.GetLogger()
 	token, err := jwt.ParseWithClaims(
 		userToken,
 		&usermodels.Token{},
@@ -66,7 +87,19 @@ func ValidateToken(userToken string) (*usermodels.Token, error) {
 	if claims, ok := token.Claims.(*usermodels.Token); ok {
 		// Check token expiration
 		if claims.ExpiresAt < time.Now().Local().Unix() {
-			fmt.Println("claims token expires")
+			log.Warnf("token expiration")
+		}
+		//check token redis
+		redisInstance := redisDB.GetInstanceRedis()
+		exists, err := redisInstance.CheckRefreshToken()
+		if err != nil {
+			log.Errorf("error checking refresh token: %v", err)
+			return nil, err
+		}
+
+		if !exists {
+			log.Errorf("Refresh token invalid on Redis.")
+			return nil, fmt.Errorf("refresh token not found")
 		}
 		return claims, nil
 	} else {

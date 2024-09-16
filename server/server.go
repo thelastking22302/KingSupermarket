@@ -4,13 +4,28 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/KingSupermarket/pkg/db"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func NewConnectionMongo() *mongo.Client {
+type SingletonMongo struct{}
+
+var (
+	once     sync.Once
+	instance *SingletonMongo
+)
+
+func GetInstance() *SingletonMongo {
+	once.Do(func() {
+		instance = &SingletonMongo{}
+	})
+	return instance
+}
+
+func (*SingletonMongo) NewConnectionMongo() *mongo.Client {
 
 	err := godotenv.Load(".env")
 	if err != nil {

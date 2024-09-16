@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	marketmodels "github.com/KingSupermarket/model/marketModels"
 	usermodels "github.com/KingSupermarket/model/userModels"
 	requsermodel "github.com/KingSupermarket/model/userModels/reqUserModel"
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,6 +20,59 @@ type db struct {
 
 func NewDB(mg *mongo.Client) *db {
 	return &db{mg: mg}
+}
+
+func (dbm *db) HistoryPurchases(ctx context.Context, id string) (*usermodels.Users, []marketmodels.OrderItems, error) {
+	var dataUsers *usermodels.Users
+	var dataProducts []marketmodels.OrderItems
+
+	// Tìm kiếm người dùng
+	userFilter := bson.M{"user_id": id}
+	err := dbm.mg.Database("KingSupermarket").Collection("users").FindOne(ctx, userFilter).Decode(&dataUsers)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil, nil // Không tìm thấy người dùng
+		}
+		return nil, nil, err
+	}
+
+	// Tìm kiếm các sản phẩm đã mua
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"user_id": id}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "order",
+			"localField":   "user_id",
+			"foreignField": "user_id",
+			"as":           "order",
+		}}},
+		{{Key: "$unwind", Value: "$order"}},
+		{{Key: "$unwind", Value: "$order.order_item"}},
+		{{Key: "$replaceRoot", Value: bson.M{
+			"newRoot": bson.M{
+				"user_id":    "$user_id",
+				"product_id": "$order.order_item.product_id",
+			},
+		}}},
+		{{Key: "$group", Value: bson.M{
+			"_id": bson.M{"user_id": "$user_id", "product_id": "$product_id"},
+		}}},
+	}
+
+	cursor, err := dbm.mg.Database("KingSupermarket").Collection("users").Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var item marketmodels.OrderItems
+		if err := cursor.Decode(&item); err != nil {
+			return nil, nil, err
+		}
+		dataProducts = append(dataProducts, item)
+	}
+
+	return dataUsers, dataProducts, nil
 }
 func (dbm *db) SignIn(ctx context.Context, data *requsermodel.SigninModel) (*usermodels.Users, error) {
 	var foundData usermodels.Users

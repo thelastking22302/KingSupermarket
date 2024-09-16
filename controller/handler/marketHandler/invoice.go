@@ -6,6 +6,7 @@ import (
 
 	"github.com/KingSupermarket/controller/common"
 	marketmodels "github.com/KingSupermarket/model/marketModels"
+	"github.com/KingSupermarket/repository"
 	repomarketiml "github.com/KingSupermarket/repository/repo_market_iml"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -56,8 +57,8 @@ func CreateInvoiceHandler(db *mongo.Client) gin.HandlerFunc {
 			Created_at:       time,
 			Updated_at:       time,
 		}
-		bus := repomarketiml.NewDbInvoice(db)
-		if err := bus.CreateInvoice(c.Request.Context(), invoice); err != nil {
+		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewCreateInvoice(c.Request.Context(), invoice); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Can't not bussiness invoice",
 			})
@@ -73,8 +74,8 @@ func HandlerGetInvoice(db *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idInvoice := c.Param("invoice_id")
 
-		biz := repomarketiml.NewDbInvoice(db)
-		data, err := biz.GetInvoice(c.Request.Context(), idInvoice)
+		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
+		data, err := bus.NewGetInvoice(c.Request.Context(), idInvoice)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "getInvoice faild",
@@ -98,8 +99,8 @@ func HandlerUpdateInvoices(db *mongo.Client) gin.HandlerFunc {
 		}
 		data.Updated_at = time.Now()
 
-		biz := repomarketiml.NewDbInvoice(db)
-		if err := biz.UpdateInvoice(c.Request.Context(), idInvoice, &data); err != nil {
+		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewUpdateInvoice(c.Request.Context(), idInvoice, &data); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": " data faild",
 			})
@@ -113,8 +114,8 @@ func HandlerUpdateInvoices(db *mongo.Client) gin.HandlerFunc {
 func HandlerDeleteInvoice(db *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idInvoice := c.Param("invoice_id")
-		biz := repomarketiml.NewDbInvoice(db)
-		if err := biz.DeleteInvoice(c.Request.Context(), idInvoice); err != nil {
+		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewDeleteInvoice(c.Request.Context(), idInvoice); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": " delete invocie faild",
 			})
@@ -135,8 +136,8 @@ func GetListInvoice(db *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		bus := repomarketiml.NewDbInvoice(db)
-		listInvoice, err := bus.GetListInvoice(c.Request.Context(), bson.M{}, pagging)
+		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
+		listInvoice, err := bus.NewGetListInvoice(c.Request.Context(), bson.M{}, pagging)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Can't not getList bussiness invoice",

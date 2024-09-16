@@ -6,6 +6,7 @@ import (
 
 	"github.com/KingSupermarket/controller/common"
 	marketmodels "github.com/KingSupermarket/model/marketModels"
+	"github.com/KingSupermarket/repository"
 	repomarketiml "github.com/KingSupermarket/repository/repo_market_iml"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -52,8 +53,8 @@ func CreateOrderItemsHandler(db *mongo.Client) gin.HandlerFunc {
 			Created_at:    &time,
 			Updated_at:    &time,
 		}
-		bus := repomarketiml.NewDbOrderItems(db)
-		if err := bus.CreateOrderItems(c.Request.Context(), orderItems); err != nil {
+		bus := repository.NewOrderItemsRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewCreateOrderItems(c.Request.Context(), orderItems); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Can't not bussiness order items",
 			})
@@ -69,8 +70,8 @@ func HandlerGetOrderItems(db *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idOrderItems := c.Param("order_item_id")
 
-		biz := repomarketiml.NewDbOrderItems(db)
-		data, err := biz.GetOrderItems(c.Request.Context(), idOrderItems)
+		bus := repository.NewOrderItemsRepoImpl(repomarketiml.NewDb(db))
+		data, err := bus.NewGetOrderItems(c.Request.Context(), idOrderItems)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "getOrderItems faild",
@@ -94,8 +95,8 @@ func HandlerUpdateOrderItems(db *mongo.Client) gin.HandlerFunc {
 		}
 		time := time.Now().UTC()
 		data.Updated_at = &time
-		biz := repomarketiml.NewDbOrderItems(db)
-		if err := biz.UpdateOrderItems(c.Request.Context(), idOrderItems, &data); err != nil {
+		bus := repository.NewOrderItemsRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewUpdateOrderItems(c.Request.Context(), idOrderItems, &data); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": " data faild",
 			})
@@ -109,8 +110,8 @@ func HandlerUpdateOrderItems(db *mongo.Client) gin.HandlerFunc {
 func HandlerDeleteOrderItems(db *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idOrderItems := c.Param("order_item_id")
-		biz := repomarketiml.NewDbOrderItems(db)
-		if err := biz.DeleteOrderItems(c.Request.Context(), idOrderItems); err != nil {
+		bus := repository.NewOrderItemsRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewDeleteOrderItems(c.Request.Context(), idOrderItems); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": " delete order items faild",
 			})
@@ -131,8 +132,8 @@ func GetListOrderItems(db *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		bus := repomarketiml.NewDbOrderItems(db)
-		listOrderItems, err := bus.GetListOrderItems(c.Request.Context(), bson.M{}, pagging)
+		bus := repository.NewOrderItemsRepoImpl(repomarketiml.NewDb(db))
+		listOrderItems, err := bus.NewGetListOrderItems(c.Request.Context(), bson.M{}, pagging)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Can't not getList bussiness order items",

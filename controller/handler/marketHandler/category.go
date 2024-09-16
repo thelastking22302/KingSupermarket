@@ -6,6 +6,7 @@ import (
 
 	"github.com/KingSupermarket/controller/common"
 	marketmodels "github.com/KingSupermarket/model/marketModels"
+	"github.com/KingSupermarket/repository"
 	repomarketiml "github.com/KingSupermarket/repository/repo_market_iml"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -48,8 +49,8 @@ func CreateCategoryHandler(db *mongo.Client) gin.HandlerFunc {
 			Created_at:  &time,
 			Updated_at:  &time,
 		}
-		bus := repomarketiml.NewDBCategory(db)
-		if err := bus.CreateCategory(c.Request.Context(), catgory); err != nil {
+		bus := repository.NewCategoryRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewCreateCategory(c.Request.Context(), catgory); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Can't not bussiness category",
 			})
@@ -65,8 +66,8 @@ func HandlerGetCategory(db *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idCategory := c.Param("category_id")
 
-		biz := repomarketiml.NewDBCategory(db)
-		data, err := biz.GetCategory(c.Request.Context(), idCategory)
+		bus := repository.NewCategoryRepoImpl(repomarketiml.NewDb(db))
+		data, err := bus.NewGetCategory(c.Request.Context(), idCategory)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "getCategory faild",
@@ -91,8 +92,8 @@ func HandlerUpdateCategory(db *mongo.Client) gin.HandlerFunc {
 		time := time.Now().UTC()
 		data.Updated_at = &time
 
-		biz := repomarketiml.NewDBCategory(db)
-		if err := biz.UpdateCategory(c.Request.Context(), idCategory, &data); err != nil {
+		bus := repository.NewCategoryRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewUpdateCategory(c.Request.Context(), idCategory, &data); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": " data faild",
 			})
@@ -106,8 +107,8 @@ func HandlerUpdateCategory(db *mongo.Client) gin.HandlerFunc {
 func HandlerDeleteCategory(db *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idCategory := c.Param("category_id")
-		biz := repomarketiml.NewDBCategory(db)
-		if err := biz.DeleteCategory(c.Request.Context(), idCategory); err != nil {
+		bus := repository.NewCategoryRepoImpl(repomarketiml.NewDb(db))
+		if err := bus.NewDeleteCategory(c.Request.Context(), idCategory); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": " delete category faild",
 			})
@@ -128,8 +129,8 @@ func GetListCategory(db *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		bus := repomarketiml.NewDBCategory(db)
-		listCategory, err := bus.GetListCategory(c.Request.Context(), pagging)
+		bus := repository.NewCategoryRepoImpl(repomarketiml.NewDb(db))
+		listCategory, err := bus.NewGetListCategory(c.Request.Context(), pagging)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Can't not getList bussiness category",

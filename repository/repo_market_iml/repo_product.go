@@ -85,11 +85,10 @@ func (db *Db) UpdateProduct(ctx context.Context, id string, data *marketmodels.P
 
 	return nil
 }
-func (db *Db) GetListProduct(ctx context.Context, filter bson.M, pagging *common.Pagging) ([]*marketmodels.Product, error) {
+func (db *Db) GetListProduct(ctx context.Context, filter bson.M, pagging *common.Pagging) ([]marketmodels.Product, error) {
 	pagging.Process()
-	//tao tuy chon tim kiem
 	opts := options.Find().SetSkip(int64((pagging.Page - 1) * pagging.Limit)).SetLimit(int64(pagging.Limit))
-	// Thực hiện truy vấn để lấy danh sách sản phẩm
+
 	cur, err := db.dbProducts().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
@@ -101,10 +100,16 @@ func (db *Db) GetListProduct(ctx context.Context, filter bson.M, pagging *common
 		return nil, err
 	}
 
+	// Chuyển đổi từ []*marketmodels.Product sang []marketmodels.Product
+	result := make([]marketmodels.Product, len(products))
+	for i, product := range products {
+		result[i] = *product // Chuyển từ *marketmodels.Product thành marketmodels.Product
+	}
+
 	total, err := db.dbProducts().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 	pagging.Total = total
-	return products, nil
+	return result, nil
 }
