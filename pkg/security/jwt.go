@@ -3,6 +3,7 @@ package security
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -10,9 +11,22 @@ import (
 	"github.com/KingSupermarket/pkg/logger"
 	"github.com/KingSupermarket/pkg/redisDB"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/joho/godotenv"
 )
 
-var keyJwt string = os.Getenv("SECRET_KEY")
+var keyJwt string
+
+func init() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	keyJwt = os.Getenv("SECRET_KEY")
+	if keyJwt == "" {
+		log.Fatal("SECRET_KEY is not set")
+	}
+}
 
 func JwtToken(data *usermodels.Users) (string, string, error) {
 	//thanh phan cua 1 token

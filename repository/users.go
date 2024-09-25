@@ -29,6 +29,15 @@ func NewUserRepoIml(u UserRepo) *userRepoIml {
 		logger: logger.GetLogger(),
 	}
 }
+func (l *userRepoIml) NewSignUp(ctx context.Context, data *usermodels.Users) (*usermodels.Users, error) {
+	dataSignUp, err := l.u.SignUp(ctx, data)
+	if err != nil {
+		l.logger.Errorf("SignUp failed for email %s: %v", data.Email, err)
+		return nil, err
+	}
+	l.logger.Infof("User signed up successfully: %s", data.Email)
+	return dataSignUp, nil
+}
 func (l *userRepoIml) NewHistoryPurchases(ctx context.Context, id string) (*usermodels.Users, []marketmodels.OrderItems, error) {
 	dataProfile, history, err := l.u.HistoryPurchases(ctx, id)
 	if err != nil {
@@ -59,15 +68,6 @@ func (l *userRepoIml) NewSignIn(ctx context.Context, data *requsermodel.SigninMo
 	return dataUser, nil
 }
 
-func (l *userRepoIml) NewSignUp(ctx context.Context, data *usermodels.Users) (*usermodels.Users, error) {
-	dataSignUp, err := l.u.SignUp(ctx, data)
-	if err != nil {
-		l.logger.Errorf("SignUp failed for email %s: %v", data.Email, err)
-		return nil, err
-	}
-	l.logger.Infof("User signed up successfully: %s", data.Email)
-	return dataSignUp, nil
-}
 
 func (l *userRepoIml) NewUpdateUser(ctx context.Context, id string, data *usermodels.Users) error {
 	if err := l.u.UpdateUser(ctx, id, data); err != nil {

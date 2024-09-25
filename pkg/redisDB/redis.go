@@ -52,7 +52,7 @@ func (s *singletonRedis) init() {
 
 func (s *singletonRedis) SaveRefreshToken(refreshToken string) error {
 	log := logger.GetLogger()
-	err := s.client.Set(context.Background(), "refresh", refreshToken, (7*24*60*60)*time.Second)
+	err := s.client.Set(context.Background(), "refresh", refreshToken, (7*24*60*60)*time.Second).Err()
 	if err != nil {
 		log.Errorf("error saving refresh token: %v", err)
 		return errors.New("saving token faild")
@@ -63,7 +63,7 @@ func (s *singletonRedis) SaveRefreshToken(refreshToken string) error {
 
 func (s *singletonRedis) CheckRefreshToken() (bool, error) {
 	log := logger.GetLogger()
-	val, err := s.client.Get(context.Background(), "refreshToken").Result()
+	val, err := s.client.Get(context.Background(), "refresh").Result()
 	if err == redis.Nil {
 		log.Errorf("token invalid")
 		return false, nil

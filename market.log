@@ -1,0 +1,7 @@
+{"level":"info","msg":"User signed up successfully: %!s(*string=0xc0002ad1d0)","time":"181812-12-1812 12:21:12"}
+{"level":"info","msg":"ping: PONG\n","time":"181812-12-1812 12:21:12"}
+{"level":"info","msg":"token saved successfully","time":"181812-12-1812 12:21:12"}
+{"level":"info","msg":"User signed in successfully: thanhhoang22032002@gmail.com","time":"181812-12-1812 12:22:12"}
+{"level":"info","msg":"token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDFmODdlYmEtNzU3ZC0xMWVmLTg0OTAtYmNlOTJmYjlmY2NmIiwiZXhwIjoxNzI3MjQxNjcyLCJpYXQiOjE3MjY2MzY4NzIsIm5iZiI6MTcyNjYzNjg3Mn0.QXO9JNDfH_JytTa8sDVuVbXtz8TR7nj4Xz6DEMBlnyY","time":"181812-12-1812 12:22:40"}
+{"level":"info","msg":"Retrieved profile for user ID d1f87eba-757d-11ef-8490-bce92fb9fccf","time":"181812-12-1812 12:22:40"}
+{"level":"info","msg":"token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDFmODdlYmEtNzU3ZC0xMWVmLTg0OTAtYmNlOTJmYjlmY2NmIiwiZXhwIjoxNzI3MjQxNjcyLCJpYXQiOjE3MjY2MzY4NzIsIm5iZiI6MTcyNjYzNjg3Mn0.QXO9JNDfH_JytTa8sDVuVbXtz8TR7nj4Xz6DEMBlnyY","time":"181812-12-1812 12:22:56"}
