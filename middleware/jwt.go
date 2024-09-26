@@ -5,25 +5,24 @@ import (
 	"strings"
 
 	"github.com/KingSupermarket/pkg/security"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func JwtMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
+func JwtMiddleware() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		authHeader := c.Get("Authorization")
 		if authHeader == "" {
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Authorization header is missing"})
 		}
+
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claims, err := security.ValidateToken(tokenString)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-			return
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
 		}
 
-		// Lưu trữ userId vào context để handler sử dụng
-		c.Set("userId", claims.User_Id)
-		c.Next()
+		// Store userId in context for use in handlers
+		c.Locals("userId", claims.User_Id)
+		return c.Next()
 	}
 }

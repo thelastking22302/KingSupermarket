@@ -7,152 +7,148 @@ import (
 	marketmodels "github.com/KingSupermarket/model/marketModels"
 	"github.com/KingSupermarket/repository"
 	repomarketiml "github.com/KingSupermarket/repository/repo_market_iml"
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func CreateOrderHandler(db *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenData, ok := c.Get("userId")
+func CreateOrderHandler(db *mongo.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		tokenData, ok := c.Locals("userId").(string)
 		if !ok {
-			c.JSON(http.StatusBadRequest, gin.H{
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": "bad user id",
 			})
-			return
 		}
-		dataClaims := tokenData.(string)
-		var dataOrder *marketmodels.Order
-		if err := c.ShouldBind(&dataOrder); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Can't not shouldBind order",
+
+		var dataOrder marketmodels.Order
+		if err := c.BodyParser(&dataOrder); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "Can't not bind order",
 			})
-			return
 		}
+
 		validate := validator.New()
 		if err := validate.Struct(dataOrder); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": "Can't not validate order",
 			})
-			return
 		}
+
 		idOrder, err := uuid.NewUUID()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Can't not uuid order",
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "Can't not create UUID for order",
 			})
-			return
 		}
 
 		id := idOrder.String()
-		time := time.Now().UTC()
+		now := time.Now().UTC()
 
 		order := &marketmodels.Order{
 			Id:           primitive.NewObjectID(),
 			Order_Id:     &id,
-			User_Id:      &dataClaims,
+			User_Id:      &tokenData,
 			Address:      dataOrder.Address,
 			Phone_Number: dataOrder.Phone_Number,
 			Total_amount: dataOrder.Total_amount,
 			Status:       dataOrder.Status,
 			Notes:        dataOrder.Notes,
-			Order_day:    &time,
-			Created_at:   &time,
-			Updated_at:   &time,
+			Order_day:    &now,
+			Created_at:   &now,
+			Updated_at:   &now,
 		}
+
 		bus := repository.NewOrderRepoImpl(repomarketiml.NewDb(db))
-		if err := bus.NewCreateOrder(c.Request.Context(), order, dataClaims); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Can't not bussiness order",
+		if err := bus.NewCreateOrder(c.Context(), order, tokenData); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "Can't not business order",
 			})
-			return
 		}
-		c.JSON(http.StatusOK, gin.H{
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"comment": "added order successfully!",
 		})
 	}
 }
-
-func HandlerGetOrder(db *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenData, ok := c.Get("userId")
+func HandlerGetOrder(db *mongo.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		tokenData, ok := c.Locals("userId").(string)
 		if !ok {
-			c.JSON(http.StatusBadRequest, gin.H{
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": "bad user id",
 			})
-			return
 		}
-		dataClaims := tokenData.(string)
-		idOrder := c.Param("order_id")
+
+		idOrder := c.Params("order_id")
 
 		bus := repository.NewOrderRepoImpl(repomarketiml.NewDb(db))
-		data, err := bus.NewGetOrder(c.Request.Context(), idOrder, dataClaims)
+		data, err := bus.NewGetOrder(c.Context(), idOrder, tokenData)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "getOrder faild",
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "getOrder failed",
 			})
-			return
 		}
-		c.JSON(http.StatusOK, gin.H{
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"order": data,
 		})
 	}
 }
-func HandlerUpdateOrder(db *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenData, ok := c.Get("userId")
+func HandlerUpdateOrder(db *mongo.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		tokenData, ok := c.Locals("userId").(string)
 		if !ok {
-			c.JSON(http.StatusBadRequest, gin.H{
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": "bad user id",
 			})
-			return
 		}
-		dataClaims := tokenData.(string)
-		idOrder := c.Param("Order_id")
+
+		idOrder := c.Params("order_id")
 		var data marketmodels.Order
-		if err := c.ShouldBind(&data); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "bind data faild",
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "bind data failed",
 			})
-			return
 		}
-		time := time.Now().UTC()
-		data.Updated_at = &time
-		data.Order_day = &time
+
+		now := time.Now().UTC()
+		data.Updated_at = &now
+		data.Order_day = &now
+
 		bus := repository.NewOrderRepoImpl(repomarketiml.NewDb(db))
-		if err := bus.NewUpdateOrder(c.Request.Context(), idOrder, &data, dataClaims); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": " data faild",
+		if err := bus.NewUpdateOrder(c.Context(), idOrder, &data, tokenData); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "data update failed",
 			})
-			return
 		}
-		c.JSON(http.StatusOK, gin.H{
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"success": true,
 		})
 	}
 }
-func HandlerDeleteOrder(db *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenData, ok := c.Get("userId")
+func HandlerDeleteOrder(db *mongo.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		tokenData, ok := c.Locals("userId").(string)
 		if !ok {
-			c.JSON(http.StatusBadRequest, gin.H{
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": "bad user id",
 			})
-			return
 		}
-		dataClaims := tokenData.(string)
-		idOrder := c.Param("order_id")
+
+		idOrder := c.Params("order_id")
 		bus := repository.NewOrderRepoImpl(repomarketiml.NewDb(db))
-		if err := bus.NewDeleteOrder(c.Request.Context(), idOrder, dataClaims); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": " delete order faild",
+		if err := bus.NewDeleteOrder(c.Context(), idOrder, tokenData); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "delete order failed",
 			})
-			return
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"comment": "Deleted success!",
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{
+			"comment": "Deleted successfully!",
 		})
 	}
 }

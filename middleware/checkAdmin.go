@@ -4,25 +4,23 @@ import (
 	"net/http"
 
 	usermodels "github.com/KingSupermarket/model/userModels"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func CheckAdmin() gin.HandlerFunc {
-	return func(c *gin.Context) {
+func CheckAdmin() fiber.Handler {
+	return func(c *fiber.Ctx) error {
 		var userAdmin usermodels.Users
-		if err := c.ShouldBind(&userAdmin); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Bind UserAdmin faild",
+		if err := c.BodyParser(&userAdmin); err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+				"error": "faild parser user",
 			})
-			return
 		}
 
 		if userAdmin.Role != "ADMIN" {
-			c.JSON(http.StatusBadRequest, gin.H{
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": "You do not have permission to access the data",
 			})
-			return
 		}
-		c.Next()
+		return c.Next()
 	}
 }
