@@ -8,41 +8,40 @@ import (
 	marketmodels "github.com/KingSupermarket/model/marketModels"
 	"github.com/KingSupermarket/repository"
 	repomarketiml "github.com/KingSupermarket/repository/repo_market_iml"
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func CreateInvoiceHandler(db *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var dataInvoice *marketmodels.Invoice
-		if err := c.ShouldBind(&dataInvoice); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Can't not shouldBind invoice",
+func CreateInvoiceHandler(db *mongo.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var dataInvoice marketmodels.Invoice
+		if err := c.BodyParser(&dataInvoice); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "Can't not bind invoice",
 			})
-			return
 		}
+
 		validate := validator.New()
 		if err := validate.Struct(dataInvoice); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": "Can't not validate invoice",
 			})
-			return
 		}
+
 		idInvoice, err := uuid.NewUUID()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Can't not uuid invoice",
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "Can't not create UUID for invoice",
 			})
-			return
 		}
 
 		id := idInvoice.String()
-		time := time.Now().UTC()
-		var status string = "PENDING"
+		now := time.Now().UTC()
+		status := "PENDING"
 		if dataInvoice.Payment_status == nil {
 			dataInvoice.Payment_status = &status
 		}
@@ -54,97 +53,96 @@ func CreateInvoiceHandler(db *mongo.Client) gin.HandlerFunc {
 			Payment_method:   dataInvoice.Payment_method,
 			Payment_status:   dataInvoice.Payment_status,
 			Payment_due_date: dataInvoice.Payment_due_date,
-			Created_at:       time,
-			Updated_at:       time,
+			Created_at:       now,
+			Updated_at:       now,
 		}
+
 		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
-		if err := bus.NewCreateInvoice(c.Request.Context(), invoice); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Can't not bussiness invoice",
+		if err := bus.NewCreateInvoice(c.Context(), invoice); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "Can't not business invoice",
 			})
-			return
 		}
-		c.JSON(http.StatusOK, gin.H{
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"comment": "added invoice successfully!",
 		})
 	}
 }
-
-func HandlerGetInvoice(db *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		idInvoice := c.Param("invoice_id")
+func HandlerGetInvoice(db *mongo.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		idInvoice := c.Params("invoice_id")
 
 		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
-		data, err := bus.NewGetInvoice(c.Request.Context(), idInvoice)
+		data, err := bus.NewGetInvoice(c.Context(), idInvoice)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "getInvoice faild",
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "getInvoice failed",
 			})
-			return
 		}
-		c.JSON(http.StatusOK, gin.H{
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"invoice": data,
 		})
 	}
 }
-func HandlerUpdateInvoices(db *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		idInvoice := c.Param("invoice_id")
+func HandlerUpdateInvoices(db *mongo.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		idInvoice := c.Params("invoice_id")
 		var data marketmodels.Invoice
-		if err := c.ShouldBind(&data); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "bind data faild",
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "bind data failed",
 			})
-			return
 		}
+
 		data.Updated_at = time.Now()
 
 		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
-		if err := bus.NewUpdateInvoice(c.Request.Context(), idInvoice, &data); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": " data faild",
+		if err := bus.NewUpdateInvoice(c.Context(), idInvoice, &data); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "data update failed",
 			})
-			return
 		}
-		c.JSON(http.StatusOK, gin.H{
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"success": true,
 		})
 	}
 }
-func HandlerDeleteInvoice(db *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		idInvoice := c.Param("invoice_id")
+func HandlerDeleteInvoice(db *mongo.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		idInvoice := c.Params("invoice_id")
 		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
-		if err := bus.NewDeleteInvoice(c.Request.Context(), idInvoice); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": " delete invocie faild",
+		if err := bus.NewDeleteInvoice(c.Context(), idInvoice); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "delete invoice failed",
 			})
-			return
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"comment": "Deleted success!",
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{
+			"comment": "Deleted successfully!",
 		})
 	}
 }
-func GetListInvoice(db *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var pagging *common.Pagging
-		if err := c.ShouldBind(&pagging); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Can't not shouldBind pagging",
+func GetListInvoice(db *mongo.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var pagging common.Pagging
+		if err := c.BodyParser(&pagging); err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "Can't not bind paging",
 			})
-			return
 		}
 
 		bus := repository.NewInvoiceRepoImpl(repomarketiml.NewDb(db))
-		listInvoice, err := bus.NewGetListInvoice(c.Request.Context(), bson.M{}, pagging)
+		listInvoice, err := bus.NewGetListInvoice(c.Context(), bson.M{}, &pagging)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Can't not getList bussiness invoice",
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": "Can't not get list business invoice",
 			})
-			return
 		}
-		c.JSON(http.StatusOK, gin.H{
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"listInvoice": listInvoice,
 			"total":       pagging.Total,
 		})

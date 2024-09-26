@@ -1,7 +1,6 @@
-{"level":"info","msg":"User signed up successfully: %!s(*string=0xc0002ad1d0)","time":"181812-12-1812 12:21:12"}
-{"level":"info","msg":"ping: PONG\n","time":"181812-12-1812 12:21:12"}
-{"level":"info","msg":"token saved successfully","time":"181812-12-1812 12:21:12"}
-{"level":"info","msg":"User signed in successfully: thanhhoang22032002@gmail.com","time":"181812-12-1812 12:22:12"}
-{"level":"info","msg":"token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDFmODdlYmEtNzU3ZC0xMWVmLTg0OTAtYmNlOTJmYjlmY2NmIiwiZXhwIjoxNzI3MjQxNjcyLCJpYXQiOjE3MjY2MzY4NzIsIm5iZiI6MTcyNjYzNjg3Mn0.QXO9JNDfH_JytTa8sDVuVbXtz8TR7nj4Xz6DEMBlnyY","time":"181812-12-1812 12:22:40"}
-{"level":"info","msg":"Retrieved profile for user ID d1f87eba-757d-11ef-8490-bce92fb9fccf","time":"181812-12-1812 12:22:40"}
-{"level":"info","msg":"token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDFmODdlYmEtNzU3ZC0xMWVmLTg0OTAtYmNlOTJmYjlmY2NmIiwiZXhwIjoxNzI3MjQxNjcyLCJpYXQiOjE3MjY2MzY4NzIsIm5iZiI6MTcyNjYzNjg3Mn0.QXO9JNDfH_JytTa8sDVuVbXtz8TR7nj4Xz6DEMBlnyY","time":"181812-12-1812 12:22:56"}
+{"level":"info","msg":"User signed up successfully: %!s(*string=0xc0003a8d60)","time":"26261-01-261 13:08:18"}
+{"level":"info","msg":"ping: PONG\n","time":"26261-01-261 13:08:18"}
+{"level":"info","msg":"token saved successfully","time":"26261-01-261 13:08:18"}
+{"level":"info","msg":"token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYjk1ZDNjMjYtN2JjZC0xMWVmLTk2ODMtYmNlOTJmYjlmY2NmIiwiZXhwIjoxNzI3OTM1Njk4LCJpYXQiOjE3MjczMzA4OTgsIm5iZiI6MTcyNzMzMDg5OH0.Y9f9UDTKGNsKnbk6j9WvOiZ7STqay7AwjHoZHTxYTYE","time":"26261-01-261 13:09:24"}
+{"level":"info","msg":"token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYjk1ZDNjMjYtN2JjZC0xMWVmLTk2ODMtYmNlOTJmYjlmY2NmIiwiZXhwIjoxNzI3OTM1Njk4LCJpYXQiOjE3MjczMzA4OTgsIm5iZiI6MTcyNzMzMDg5OH0.Y9f9UDTKGNsKnbk6j9WvOiZ7STqay7AwjHoZHTxYTYE","time":"26261-01-261 13:09:34"}
+{"level":"info","msg":"Retrieved profile for user ID b95d3c26-7bcd-11ef-9683-bce92fb9fccf","time":"26261-01-261 13:09:34"}

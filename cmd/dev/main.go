@@ -2,12 +2,11 @@ package main
 
 import (
 	"github.com/KingSupermarket/router"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	r := gin.New()
-	r.Use(gin.Logger())
-	router.NewRouter(r)
-	r.Run(":3251")
+	app := fiber.New()
+	router.NewRouter(app)
+	app.Listen(":3251")
 }
